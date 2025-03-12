@@ -11,8 +11,9 @@ class YoungStudent extends Model
         'parent_name',
         'parent_phone_number',
         'school_name',
+        'class_id',
     ];
-    
+
     public function student()
     {
         return $this->belongsTo(Student::class);

@@ -11,6 +11,7 @@ class AdultStudent extends Model
         'emergency_responder',
         'phone_number',
         'emergency_responder_phone_number',
+        'class_id',
     ];
 
     public function student()
