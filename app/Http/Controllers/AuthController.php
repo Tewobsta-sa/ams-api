@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\Student;
 use App\Models\YoungStudent;
 use App\Models\AdultStudent;
+use App\Models\Classes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -41,7 +42,7 @@ class AuthController extends Controller
                 'discrit' => 'nullable|string',
                 'special_place' => 'nullable|string',
                 'house_no' => 'nullable|string',
-                'class_id' => 'required|integer|exists:classes,id', // Validate class by ID
+                'class_name' => 'required|string|exists:classes,name', 
                 'parent_name' => 'required_if:student_type,young|string',
                 'parent_phone_number' => 'required_if:student_type,young|string',
                 'school_name' => 'required_if:student_type,young|string',
@@ -51,11 +52,16 @@ class AuthController extends Controller
             ]);
     
             // Get the class by ID and check if it belongs to the correct student type
-            $class = Classes::find($request->class_id);
-    
-            if (!$class || $class->student_type !== $request->student_type) {
+            $class = Classes::where('name', $request->class_name)->first();
+
+            if (!$class) {
+                return response()->json(['message' => 'Class not found.'], 422);
+            }
+
+            if ($class->student_type !== $request->student_type) {
                 return response()->json(['message' => 'Invalid class selection for student type.'], 422);
             }
+
     
             // Calculate age from birth date
             $age = Carbon::parse($request->birth_date)->age;
