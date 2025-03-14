@@ -26,6 +26,47 @@ class StudentController extends Controller
         }
         return response()->json($student, 200);
     }
+    
+    public function filterByClass(Request $request)
+{
+        // Validate the request to ensure 'class_id' is provided
+        $request->validate([
+            'class_id' => 'required|integer|exists:classes,id', // Ensure class_id is provided and valid
+        ]);
+
+        // Get the validated class ID
+        $classId = $request->input('class_id');
+
+        // Fetch students from young_students and adult_students tables
+        $youngStudents = YoungStudent::where('class_id', $classId)->get();
+        $adultStudents = AdultStudent::where('class_id', $classId)->get();
+
+        // Merge both collections into one
+        $students = $youngStudents->merge($adultStudents);
+
+        // Return the combined list of students
+        return response()->json($students, 200);
+}
+    
+
+    // Search students by name
+    public function searchByName(Request $request)
+    {
+        $request->validate([
+            'search' => 'required|string|min:1', // Ensure search term is provided
+        ]);
+
+        $searchTerm = $request->search;
+
+        $students = Student::with(['youngStudent', 'adultStudent'])
+                            ->where(function ($q) use ($searchTerm) {
+                                $q->where('name', 'LIKE', "%{$searchTerm}%")
+                                  ->orWhere('christian_name', 'LIKE', "%{$searchTerm}%");
+                            })
+                            ->get();
+
+        return response()->json($students, 200);
+    }
 
     // Update a student
     public function update(Request $request, $id)
