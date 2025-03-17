@@ -15,9 +15,6 @@ class StudentController extends Controller
 {
     public function registerStudent(Request $request)
     {
-        if (!Auth::check()) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
-        }
 
         if (Auth::user()->role->name !== 'Student Data Manager') {
             return response()->json(['message' => 'Forbidden: Only Admins can register students.'], 403);
@@ -154,6 +151,10 @@ class StudentController extends Controller
     // Update a student
     public function update(Request $request, $id)
 {
+    if (Auth::user()->role->name !== 'Student Data Manager') {
+        return response()->json(['message' => 'Forbidden: Only Admins can register users.'], 403);
+    }
+
     $student = Student::find($id);
     if (!$student) {
         return response()->json(['message' => 'Student not found'], 404);
@@ -222,6 +223,10 @@ class StudentController extends Controller
     // Delete a student
     public function destroy($id)
     {
+        if (Auth::user()->role->name !== 'Student Data Manager') {
+            return response()->json(['message' => 'Forbidden: Only Student Data Manager can register users.'], 403);
+        }
+
         $student = Student::find($id);
         if (!$student) {
             return response()->json(['message' => 'Student not found'], 404);

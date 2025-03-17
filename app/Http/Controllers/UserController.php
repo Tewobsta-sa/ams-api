@@ -27,7 +27,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|string|in:Admin,Student Data Manager,Super User',
+            'role' => 'required|string|in:Admin,Student Data Manager,Super User, Attendance Recorder',
         ]);
 
         $role = Role::where('name', $request->role)->firstOrFail();
@@ -45,12 +45,20 @@ class UserController extends Controller
     // Get all users
     public function index()
     {
+        if (Auth::user()->role->name !== 'Admin') {
+            return response()->json(['message' => 'Forbidden: Only Admins can register users.'], 403);
+        }
+
         return response()->json(User::all(), 200);
     }
 
     // Get a single user by ID
     public function show($id)
     {
+        if (Auth::user()->role->name !== 'Admin') {
+            return response()->json(['message' => 'Forbidden: Only Admins can register users.'], 403);
+        }
+
         $user = User::find($id);
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
@@ -61,6 +69,10 @@ class UserController extends Controller
     // Update a user
     public function update(Request $request, $id)
     {
+        if (Auth::user()->role->name !== 'Admin') {
+            return response()->json(['message' => 'Forbidden: Only Admins can register users.'], 403);
+        }
+
         $user = User::find($id);
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
@@ -79,6 +91,10 @@ class UserController extends Controller
     //search by name
     public function searchByName(Request $request)
     {
+        if (Auth::user()->role->name !== 'Admin') {
+            return response()->json(['message' => 'Forbidden: Only Admins can register users.'], 403);
+        }
+
         $request->validate([
             'name' => 'required|string',
         ]);
@@ -95,6 +111,10 @@ class UserController extends Controller
 // Filter users by role
     public function filterByRole(Request $request)
     {
+        if (Auth::user()->role->name !== 'Admin') {
+            return response()->json(['message' => 'Forbidden: Only Admins can register users.'], 403);
+        }
+
         $request->validate([
             'role' => 'required|string|exists:roles,name',
         ]);
@@ -114,6 +134,10 @@ class UserController extends Controller
     // Delete a user
     public function destroy($id)
     {
+        if (Auth::user()->role->name !== 'Admin') {
+            return response()->json(['message' => 'Forbidden: Only Admins can register users.'], 403);
+        }
+        
         $user = User::find($id);
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
