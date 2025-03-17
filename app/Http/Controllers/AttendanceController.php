@@ -5,39 +5,60 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\Student;
 use App\Models\Classes;
+use App\Models\YoungStudent;
+use App\Models\AdultStudent;
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
     public function markAttendance(Request $request)
-    {
-        $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'class_id' => 'required|exists:classes,id',
-            'date' => 'required|date',
-            'status' => 'required|in:present,absent,permission',
-        ]);
+{
+    $request->validate([
+        'student_id' => 'required|exists:students,id',
+        'status' => 'required|in:present,absent,permission',
+    ]);
 
-        // Check if attendance already marked for this student on the same date
-        $existingAttendance = Attendance::where('student_id', $request->student_id)
-            ->where('class_id', $request->class_id)
-            ->where('date', $request->date)
-            ->first();
-
-        if ($existingAttendance) {
-            return response()->json(['message' => 'Attendance already marked for this student on this date'], 422);
-        }
-
-        // Save attendance
-        Attendance::create([
-            'student_id' => $request->student_id,
-            'class_id' => $request->class_id,
-            'date' => $request->date,
-            'status' => $request->status,
-        ]);
-
-        return response()->json(['message' => 'Attendance marked successfully'], 201);
+    // Get the student
+    $student = Student::find($request->student_id);
+    if (!$student) {
+        return response()->json(['message' => 'Student not found'], 404);
     }
+
+    // Determine class based on student type
+    $classId = null;
+    if ($student->student_type === 'young') {
+        $classId = YoungStudent::where('student_id', $student->id)->value('class_id');
+    } elseif ($student->student_type === 'adult') {
+        $classId = AdultStudent::where('student_id', $student->id)->value('class_id');
+    }
+
+    if (!$classId) {
+        return response()->json(['message' => 'Student does not have a registered class'], 422);
+    }
+
+    // Set the current date (without allowing user input)
+    $currentDate = now()->toDateString();
+
+    // Check if attendance already marked for this student on the same date
+    $existingAttendance = Attendance::where('student_id', $request->student_id)
+        ->where('class_id', $classId)
+        ->where('date', $currentDate)
+        ->first();
+
+    if ($existingAttendance) {
+        return response()->json(['message' => 'Attendance already marked for this student today'], 422);
+    }
+
+    // Save attendance with the student's class ID and current date
+    Attendance::create([
+        'student_id' => $request->student_id,
+        'class_id' => $classId, // Use the fetched class ID
+        'date' => $currentDate, // Use server time
+        'status' => $request->status,
+    ]);
+
+    return response()->json(['message' => 'Attendance marked successfully'], 201);
+}
 
     public function getAttendanceDates()
     {

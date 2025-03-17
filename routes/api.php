@@ -24,8 +24,12 @@ Route::post('/debug', function () {
 Route::post('/login', [AuthController::class, 'login']); // No auth required
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register/user', [UserController::class, 'register']);
+    Route::post('/register/student', [StudentController::class, 'registerStudent']);
+
     Route::get('user/index', [UserController::class, 'index']); 
+    Route::get('/user/search-by-name', [UserController::class, 'searchByName']);
+    Route::get('/user/filter-by-role', [UserController::class, 'filterByRole']);
     Route::get('user/show/{id}', [UserController::class, 'show']); 
     Route::put('user/update/{id}', [UserController::class, 'update']); 
     Route::delete('user/destroy/{id}', [UserController::class, 'destroy']); 
